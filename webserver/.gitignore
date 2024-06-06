@@ -1,3 +1,4 @@
 .env
 supabaseClient.py
 notionClient.py
+venv

@@ -1,5 +1,5 @@
 import streamlit as st
-from businessLogic import transcribeVideoOrchestrator
+from businessLogic import transcribe_video_orchestrator
 from streamlit.components.v1 import html
 
 
@@ -41,7 +41,7 @@ def main():
         "If you take a smaller model it is faster but not as accurate, whereas a larger model is slower but more accurate.")
     if st.button("Transcribe"):
         if url:
-            transcript = transcribeVideoOrchestrator(url, model)
+            transcript = transcribe_video_orchestrator(url, model)
 
             if transcript:
                 st.subheader("Transcription:")
