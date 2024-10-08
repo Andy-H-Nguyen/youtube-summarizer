@@ -13,18 +13,18 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI(api_key=os.environ['openai_api_key'])
 
-def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, float | str]], model_name: str = "gpt-3.5-turbo", batch_size: int = 5) -> str:
-    messages = [{"role": "system", "content": "You are a helpful assistant that summarizes video transcripts. You also have an OCR of the screen called Screentext. The OCR can be unreliable."}]
+def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, float | str]], model_name: str = "gpt-3.5-turbo", batch_size: int = 60) -> str:
+    messages = [{"role": "system", "content": "You are a helpful assistant that summarizes big tech videos. You have a transcript. Keep it concise and comprehensive. Please format using Markdown. Keep formatting consistent between prompts. Add insights when necessary."}]
     partial_summaries = []
     
     for i in range(0, len(transcription_with_timestamps), batch_size):
         batch = transcription_with_timestamps[i:i + batch_size]
         batch_text = "\n\n".join(
-            f"From {segment['start']}s to {segment['end']}s: Transcription: {segment['text']} Screentext: {segment['screen_text']}"
+            f"From {segment['start']}s to {segment['end']}s: Transcription: {segment['text']}"
             for segment in batch
         )
         messages.append({"role": "user", "content": batch_text})
-        messages.append({"role": "user", "content": "Please summarize this part. Keep it concise and comprehensive."})
+        messages.append({"role": "user", "content": "Please summarize this. Keep it concise and comprehensive. Please format using Markdown. Keep formatting consistent between prompts."})
 
         response = client.chat.completions.create(
             model=model_name,
@@ -36,24 +36,23 @@ def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, fl
         partial_summaries.append(batch_summary)
 
     combined_summaries = "\n\n".join(partial_summaries)
+
     return combined_summaries
 
 ssl._create_default_https_context = ssl._create_stdlib_context
 
-def transcribe_video_orchestrator(youtube_url: str, model_name: str) -> List[Dict[str, float | str]]:
+def transcribe_video_orchestrator(youtube_url: str, model_name: str, extract_text: bool = False) -> List[Dict[str, float | str]]:
     video = download_youtube_video(youtube_url)
     transcription = transcribe(video, model_name)
-    # Extract text from frames at the end of each transcription segment
-    screen_text = extract_text_from_video(video['path'], transcription)
+    if extract_text:
+        screen_text = extract_text_from_video(video['path'], transcription)
 
-    # Print extracted text for debugging or further processing
-    for timestamp, text in screen_text.items():
-        print(f"Timestamp {timestamp:.2f}s: {text}")
+        for timestamp, text in screen_text.items():
+            print(f"Timestamp {timestamp:.2f}s: {text}")
 
-    # Combine extracted text with the transcription if needed
-    for segment in transcription:
-        end_time = segment["end"]
-        segment["screen_text"] = screen_text.get(end_time, "")
+        for segment in transcription:
+            end_time = segment["end"]
+            segment["screen_text"] = screen_text.get(end_time, "")
 
     return summarize_video_with_memory(transcription)
 
