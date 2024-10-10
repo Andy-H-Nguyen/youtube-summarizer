@@ -10,7 +10,7 @@ const Footer = () => {
                   <div className="row align-items-center">
                     <div className="col-6">
                       <p className="mb-35">
-                        Video2Text - Transcribe Videos easily with OpenAI
+                        YoutubeSummarizer - Summarize Videos easily with OpenAI
                       </p>
                       <div className="social__links footer__social"></div>
                     </div>
@@ -22,12 +22,7 @@ const Footer = () => {
                           accurate video-to-text conversion. By downloading and
                           executing the converter, you will be able to access
                           this technology for free and use it to convert your
-                          videos into text. I believe that this service can
-                          provide value to a wide range of users, including
-                          researchers, educators, journalists, and content
-                          creators. If you have any questions or concerns about
-                          the video2text converter, please do not hesitate to
-                          contact me <strong>contact@jhayer.tech</strong>
+                          videos into text.</strong>
                         </p>
                       </div>
                     </div>
