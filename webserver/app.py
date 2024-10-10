@@ -3,7 +3,7 @@ from businessLogic import transcribe_video_orchestrator
 from streamlit.components.v1 import html
 
 def main():
-    st.title("Video2Text")
+    st.title("YoutubeSummarizer")
     # User input: YouTube URL
     url = st.text_input("Enter YouTube URL:")
 
@@ -27,7 +27,7 @@ def main():
                 unsafe_allow_html=True)
 
     st.write(
-        "If you need help or have questions about Video2Text, feel free to reach out to me.")
+        "If you need help or have questions about YoutubeSummarizer, feel free to reach out to me.")
 
     st.write("Please enter your message below:")
     user_message = st.text_area("Your Message:")

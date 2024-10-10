@@ -10,7 +10,7 @@ const Footer = () => {
                   <div className="row align-items-center">
                     <div className="col-6">
                       <p className="mb-35">
-                        Video2Text - Transcribe Videos easily with OpenAI
+                        YoutubeSummarizer - Transcribe Videos easily with OpenAI
                       </p>
                       <div className="social__links footer__social"></div>
                     </div>

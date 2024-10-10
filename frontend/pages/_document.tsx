@@ -5,9 +5,9 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <meta
-          name="Video2Text - Transcibe Videos easily"
-          content="Video2Text - Transcibe Videos easily"
-          about="Video2Text - Transcibe Videos easily"
+          name="YoutubeSummarizer - Transcibe Videos easily"
+          content="YoutubeSummarizer - Transcibe Videos easily"
+          about="YoutubeSummarizer - Transcibe Videos easily"
         />
         <link rel="icon" href="/favicon.ico" />
         <script
