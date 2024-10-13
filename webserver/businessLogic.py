@@ -66,13 +66,17 @@ def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, fl
 
 ssl._create_default_https_context = ssl._create_stdlib_context
 
-def transcribe_video_orchestrator(youtube_url: str, model_name: str, batch_size: int) -> Dict[str, List[Dict[str, float | str]]]:
+def transcribe_video_orchestrator(youtube_url: str, model_name: str, extract_text: bool = False) -> Dict[str, List[Dict[str, float | str]]]:
     video = download_youtube_video(youtube_url)
     transcription = transcribe(video, model_name)
 
-    # Pass batch_size to the summarization function
-    summary = summarize_video_with_memory(transcription, batch_size=batch_size)
-    
+    if extract_text:
+        screen_text = extract_text_from_video(video['path'], transcription)
+        for segment in transcription:
+            end_time = segment["end"]
+            segment["screen_text"] = screen_text.get(end_time, "")
+
+    summary = summarize_video_with_memory(transcription)
     return {'summary': summary, 'transcription': transcription}
 
 def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps: bool = True) -> List[Dict[str, float | str]]:
