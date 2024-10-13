@@ -13,6 +13,23 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI(api_key=os.environ['openai_api_key'])
 
+def format_transcription(transcription):
+    formatted_text = ""
+    
+    for segment in transcription:
+        start_time = segment['start']
+        end_time = segment['end']
+        text = segment['text']
+        
+        # Format the time to a more readable format (hh:mm:ss)
+        start_time_formatted = time.strftime("%H:%M:%S", time.gmtime(start_time))
+        end_time_formatted = time.strftime("%H:%M:%S", time.gmtime(end_time))
+        
+        # Add formatted segment to the result string
+        formatted_text += f"**{start_time_formatted} - {end_time_formatted}**: {text}\n\n"
+    
+    return formatted_text
+
 def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, float | str]], model_name: str = "gpt-3.5-turbo", batch_size: int = 10) -> str:
     messages = [{"role": "system", "content": "You are a helpful assistant that summarizes big tech videos. You have a transcript. Keep it concise and comprehensive. Please format using Markdown. Keep formatting consistent between responses. Feel free to use Code markdown to elaborate on examples."}]
     partial_summaries = []
@@ -35,35 +52,32 @@ def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, fl
             
             batch_summary = response.choices[0].message.content
             partial_summaries.append(batch_summary)
-            combined_summaries = "\n\n".join(partial_summaries)
-    except:
-        print("An exception has occured while adding messages - truncation may have happened")
+        
+        combined_summaries = "\n\n".join(partial_summaries)
+    except Exception as e:
+        print(f"An exception has occurred: {e}")
         return combined_summaries
 
     return combined_summaries
 
 ssl._create_default_https_context = ssl._create_stdlib_context
 
-def transcribe_video_orchestrator(youtube_url: str, model_name: str, extract_text: bool = False) -> List[Dict[str, float | str]]:
+def transcribe_video_orchestrator(youtube_url: str, model_name: str, extract_text: bool = False) -> Dict[str, List[Dict[str, float | str]]]:
     video = download_youtube_video(youtube_url)
     transcription = transcribe(video, model_name)
+
     if extract_text:
         screen_text = extract_text_from_video(video['path'], transcription)
-
-        for timestamp, text in screen_text.items():
-            print(f"Timestamp {timestamp:.2f}s: {text}")
-
         for segment in transcription:
             end_time = segment["end"]
             segment["screen_text"] = screen_text.get(end_time, "")
 
-    return summarize_video_with_memory(transcription)
+    summary = summarize_video_with_memory(transcription)
+    return {'summary': summary, 'transcription': transcription}
 
 def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps: bool = True) -> List[Dict[str, float | str]]:
-    print(f"Transcribing '{video['name']}' using model: {model_name}")
-
     model = whisper.load_model(model_name)
-
+    
     if hasTimestamps:
         result = model.transcribe(video['path'], verbose=True)
         transcription_with_timestamps = [
@@ -74,11 +88,9 @@ def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps:
             }
             for segment in result["segments"]
         ]
-        pprint(transcription_with_timestamps)
         return transcription_with_timestamps
     else:
         result = model.transcribe(video['path'])
-        pprint(result)
         return result["text"]
 
 def download_youtube_video(youtube_url: str) -> dict:
@@ -90,18 +102,11 @@ def download_youtube_video(youtube_url: str) -> dict:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(youtube_url, download=True)
         file_path = ydl.prepare_filename(info)
-        print(f"Download complete: {file_path}")
         return {
             "name": info.get('title', 'Unknown Title'),
             "thumbnail": info.get('thumbnail'),
             "path": file_path
         }
-
-def on_progress(stream, chunk, bytes_remaining):
-    total_size = stream.filesize
-    bytes_downloaded = total_size - bytes_remaining
-    pct_completed = bytes_downloaded / total_size * 100
-    print(f"Download progress: {round(pct_completed, 2)}%")
 
 def extract_text_from_video(video_path: str, transcription_with_timestamps: List[Dict[str, float | str]]) -> Dict[float, str]:
     video_capture = cv2.VideoCapture(video_path)
@@ -119,13 +124,10 @@ def extract_text_from_video(video_path: str, transcription_with_timestamps: List
         video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         success, frame = video_capture.read()
         if not success:
-            print(f"Warning: Could not extract frame at {end_time}s")
             continue
 
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         text = pytesseract.image_to_string(gray_frame)
-        print(f"Extracted text at {end_time:.2f}s: {text.strip()}")
-
         text_data[end_time] = text.strip()
 
     video_capture.release()
