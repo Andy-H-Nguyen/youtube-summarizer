@@ -26,12 +26,5 @@ def main():
     st.markdown('<div style="margin-top: 450px;"</div>',
                 unsafe_allow_html=True)
 
-    st.write(
-        "If you need help or have questions about YoutubeSummarizer, feel free to reach out to me.")
-
-    st.write("Please enter your message below:")
-    user_message = st.text_area("Your Message:")
-
-
 if __name__ == "__main__":
     main()
