@@ -86,7 +86,8 @@ def main():
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 400px;
+        width: 704px;
+        height: 528px;
         border: 2px dashed #7f8c8d;
         border-radius: 20px;
         color: #7f8c8d;
@@ -130,27 +131,40 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
+    # Initialize session state for the video URL
+    if 'youtube_url' not in st.session_state:
+        st.session_state['youtube_url'] = ''
+    if 'transcription' not in st.session_state:
+        st.session_state['transcription'] = ''
+    if 'summary' not in st.session_state:
+        st.session_state['summary'] = ''
+
     with st.container():
         video_placeholder = st.empty()
         loading_placeholder = st.empty()
         progress_bar_placeholder = st.empty()
 
         url = st.text_input("Enter YouTube URL:", placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")
-        
+
         models = ["Tiny", "Base", "Small", "Medium", "Large"]
         model = st.selectbox("Select Transcription Model:", models, help="Choose a model for transcription. Larger models are more accurate but slower.")
 
         st.info("**Note**: Smaller models are faster but less accurate, while larger models are slower but more accurate.", icon="⚙️")
 
-        if url:
+        # Show video only if the URL changes or is set
+        if url and url != st.session_state['youtube_url']:
+            st.session_state['youtube_url'] = url
             video_placeholder.video(url)
+        elif st.session_state['youtube_url']:
+            video_placeholder.video(st.session_state['youtube_url'])
         else:
             video_placeholder.markdown("<div class='placeholder'>Video will appear here once a valid URL is provided</div>", unsafe_allow_html=True)
 
         tabs = st.tabs(["Transcription", "Summary"])
 
         if st.button("Transcribe", key="transcribe_button", help="Click to start the transcription process"):
-            if url:
+            if st.session_state['youtube_url']:
+                # Show loading spinner and progress bar
                 loading_placeholder.markdown("⏳ Transcribing video, please wait...", unsafe_allow_html=True)
                 progress_bar = progress_bar_placeholder.progress(0)
 
@@ -158,27 +172,30 @@ def main():
                     time.sleep(0.05)
                     progress_bar.progress(percent_complete + 1)
 
-                result = transcribe_video_orchestrator(url, model.lower())
-                transcript = result.get('transcription')
-                summary = result.get('summary')
+                # Call transcription and summary (save results in session state)
+                result = transcribe_video_orchestrator(st.session_state['youtube_url'], model.lower())
+                st.session_state['transcription'] = result.get('transcription')
+                st.session_state['summary'] = result.get('summary')
 
+                # Hide loading elements
                 loading_placeholder.empty()
                 progress_bar_placeholder.empty()
 
+                # Display results in the tabs
                 with tabs[0]:
-                    if transcript:
+                    if st.session_state['transcription']:
                         st.success("Transcription completed!")
                         st.markdown("<h3 class='tabs-header'>Transcription Result:</h3>", unsafe_allow_html=True)
-                        formatted_transcript = format_transcription(transcript)
+                        formatted_transcript = format_transcription(st.session_state['transcription'])
                         st.markdown(f"<div class='transcription-box'>{formatted_transcript}</div>", unsafe_allow_html=True)
                     else:
                         st.error("Error occurred while transcribing.")
 
                 with tabs[1]:
-                    if summary:
+                    if st.session_state['summary']:
                         st.success("Summary generated!")
                         st.markdown("<h3 class='tabs-header'>Summary Result:</h3>", unsafe_allow_html=True)
-                        st.markdown(f"<div class='summary-box'>{summary}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='summary-box'>{st.session_state['summary']}</div>", unsafe_allow_html=True)
                     else:
                         st.error("Error occurred while summarizing.")
             else:
