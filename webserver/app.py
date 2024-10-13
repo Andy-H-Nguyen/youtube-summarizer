@@ -144,44 +144,47 @@ def main():
         loading_placeholder = st.empty()
         progress_bar_placeholder = st.empty()
 
+        # User input: YouTube URL
         url = st.text_input("Enter YouTube URL:", placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")
 
+        # Model selection dropdown
         models = ["Tiny", "Base", "Small", "Medium", "Large"]
         model = st.selectbox("Select Transcription Model:", models, help="Choose a model for transcription. Larger models are more accurate but slower.")
 
+        # Slider to control the batch size for summary detail level
+        batch_size = st.slider("Batch Size", min_value=5, max_value=60, value=10, step=5, help="Adjust the level of summary detail by controlling batch size. Less is more detailed.")
+
         st.info("**Note**: Smaller models are faster but less accurate, while larger models are slower but more accurate.", icon="⚙️")
 
-        # Show video only if the URL changes or is set
-        if url and url != st.session_state['youtube_url']:
-            st.session_state['youtube_url'] = url
+        # Display the video or placeholder
+        if url:
             video_placeholder.video(url)
-        elif st.session_state['youtube_url']:
-            video_placeholder.video(st.session_state['youtube_url'])
         else:
             video_placeholder.markdown("<div class='placeholder'>Video will appear here once a valid URL is provided</div>", unsafe_allow_html=True)
 
         tabs = st.tabs(["Transcription", "Summary"])
 
+        # Transcription button action
         if st.button("Transcribe", key="transcribe_button", help="Click to start the transcription process"):
-            if st.session_state['youtube_url']:
-                # Show loading spinner and progress bar
+            if url:
                 loading_placeholder.markdown("⏳ Transcribing video, please wait...", unsafe_allow_html=True)
                 progress_bar = progress_bar_placeholder.progress(0)
 
+                # Simulate progress (optional)
                 for percent_complete in range(100):
                     time.sleep(0.05)
                     progress_bar.progress(percent_complete + 1)
 
-                # Call transcription and summary (save results in session state)
-                result = transcribe_video_orchestrator(st.session_state['youtube_url'], model.lower())
-                st.session_state['transcription'] = result.get('transcription')
-                st.session_state['summary'] = result.get('summary')
+                # Call transcription (passing batch_size as summary detail level)
+                result = transcribe_video_orchestrator(url, model.lower(), batch_size=batch_size)
+                transcript = result.get('transcription')
+                summary = result.get('summary')
 
-                # Hide loading elements
+                # Hide loading spinner and progress bar
                 loading_placeholder.empty()
                 progress_bar_placeholder.empty()
 
-                # Display results in the tabs
+                # Display transcription and summary in tabs
                 with tabs[0]:
                     if st.session_state['transcription']:
                         st.success("Transcription completed!")
