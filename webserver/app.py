@@ -9,11 +9,11 @@ def main():
     # Custom CSS for enhanced UI/UX design
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
 
     body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #1c1c1e;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%);
         color: #ffffff;
     }
     .main-title {
@@ -36,33 +36,29 @@ def main():
     .input-container {
         margin-top: 40px;
         padding: 35px;
-        background-color: #2d2d2f;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
         border-radius: 20px;
-        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
-        transition: all 0.4s ease;
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
     }
     .input-container:hover {
-        box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.7);
+        box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.6);
     }
     input, select {
         font-size: 1.4em;
         padding: 12px;
         border: none;
         border-radius: 10px;
-        background-color: #333;
-        color: #f1c40f;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
         margin-bottom: 25px;
         width: 100%;
     }
     input::placeholder {
-        color: #7f8c8d;
-    }
-    .selectbox label {
-        color: #f39c12;
-        font-weight: bold;
+        color: #cccccc;
     }
     .button {
-        background-color: #ff6348;
+        background: linear-gradient(135deg, #ff6348 0%, #ff7f50 100%);
         border: none;
         color: white;
         padding: 18px 36px;
@@ -70,11 +66,11 @@ def main():
         font-size: 1.3em;
         border-radius: 15px;
         cursor: pointer;
-        transition: background-color 0.4s ease-in-out, transform 0.4s;
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     }
     .button:hover {
-        background-color: #ff7f50;
         transform: scale(1.05);
+        box-shadow: 0px 8px 30px rgba(255, 99, 72, 0.6);
     }
     .footer {
         text-align: center;
@@ -106,6 +102,10 @@ def main():
         box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
         word-wrap: break-word;
     }
+    .video-glow {
+        box-shadow: 0 0 15px 3px rgba(255, 99, 72, 0.7);
+        transition: box-shadow 0.5s ease;
+    }
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -130,6 +130,14 @@ def main():
             YouTube Summarizer
         </div>
     """, unsafe_allow_html=True)
+
+    # Initialize session state for the video URL, transcription, and summary
+    if 'youtube_url' not in st.session_state:
+        st.session_state['youtube_url'] = ''
+    if 'transcription' not in st.session_state:
+        st.session_state['transcription'] = None
+    if 'summary' not in st.session_state:
+        st.session_state['summary'] = None
 
     with st.container():
         video_placeholder = st.empty()
