@@ -186,19 +186,19 @@ def main():
 
                 # Display transcription and summary in tabs
                 with tabs[0]:
-                    if st.session_state['transcription']:
+                    if transcript:
                         st.success("Transcription completed!")
                         st.markdown("<h3 class='tabs-header'>Transcription Result:</h3>", unsafe_allow_html=True)
-                        formatted_transcript = format_transcription(st.session_state['transcription'])
+                        formatted_transcript = format_transcription(transcript)
                         st.markdown(f"<div class='transcription-box'>{formatted_transcript}</div>", unsafe_allow_html=True)
                     else:
                         st.error("Error occurred while transcribing.")
 
                 with tabs[1]:
-                    if st.session_state['summary']:
+                    if summary:
                         st.success("Summary generated!")
                         st.markdown("<h3 class='tabs-header'>Summary Result:</h3>", unsafe_allow_html=True)
-                        st.markdown(f"<div class='summary-box'>{st.session_state['summary']}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='summary-box'>{summary}</div>", unsafe_allow_html=True)
                     else:
                         st.error("Error occurred while summarizing.")
             else:

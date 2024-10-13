@@ -35,7 +35,7 @@ def format_transcription(transcription):
     return formatted_text
 
 def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, float | str]], model_name: str = "gpt-3.5-turbo", batch_size: int = 10) -> str:
-    messages = [{"role": "system", "content": "You are a helpful assistant that summarizes big tech videos. You have a transcript. Keep it concise and comprehensive. Please format using Markdown. Keep formatting consistent between responses. Feel free to use Code markdown to elaborate on examples."}]
+    messages = [{"role": "system", "content": "You are a helpful assistant that summarizes big tech videos. You have a transcript. Keep it concise and comprehensive."}]
     partial_summaries = []
     
     try:
@@ -66,7 +66,7 @@ def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, fl
 
 ssl._create_default_https_context = ssl._create_stdlib_context
 
-def transcribe_video_orchestrator(youtube_url: str, model_name: str, extract_text: bool = False) -> Dict[str, List[Dict[str, float | str]]]:
+def transcribe_video_orchestrator(youtube_url: str, model_name: str, batch_size: int, extract_text: bool = False) -> Dict[str, List[Dict[str, float | str]]]:
     video = download_youtube_video(youtube_url)
     transcription = transcribe(video, model_name)
 
@@ -76,7 +76,8 @@ def transcribe_video_orchestrator(youtube_url: str, model_name: str, extract_tex
             end_time = segment["end"]
             segment["screen_text"] = screen_text.get(end_time, "")
 
-    summary = summarize_video_with_memory(transcription)
+    # Pass batch_size to the summarization function
+    summary = summarize_video_with_memory(transcription, batch_size=batch_size)
     return {'summary': summary, 'transcription': transcription}
 
 def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps: bool = True) -> List[Dict[str, float | str]]:
