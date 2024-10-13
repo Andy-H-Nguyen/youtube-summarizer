@@ -131,14 +131,6 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    # Initialize session state for the video URL
-    if 'youtube_url' not in st.session_state:
-        st.session_state['youtube_url'] = ''
-    if 'transcription' not in st.session_state:
-        st.session_state['transcription'] = ''
-    if 'summary' not in st.session_state:
-        st.session_state['summary'] = ''
-
     with st.container():
         video_placeholder = st.empty()
         loading_placeholder = st.empty()
