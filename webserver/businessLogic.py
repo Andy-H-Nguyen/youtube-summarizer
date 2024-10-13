@@ -6,10 +6,13 @@ from pprint import pprint
 from typing import Dict, List
 import os
 import whisper
-import cv2
 import pytesseract
 from openai import OpenAI
 from dotenv import load_dotenv
+try:
+    import cv2
+except ImportError:
+    cv2 = None  # Handle the absence of OpenCV gracefully
 
 load_dotenv()
 client = OpenAI(api_key=os.environ['openai_api_key'])
@@ -110,6 +113,10 @@ def download_youtube_video(youtube_url: str) -> dict:
         }
 
 def extract_text_from_video(video_path: str, transcription_with_timestamps: List[Dict[str, float | str]]) -> Dict[float, str]:
+    if cv2 is None:
+        print("OpenCV not available. Skipping text extraction.")
+        return {}
+
     video_capture = cv2.VideoCapture(video_path)
     if not video_capture.isOpened():
         print(f"Error: Could not open video {video_path}")
