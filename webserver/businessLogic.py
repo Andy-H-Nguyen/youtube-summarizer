@@ -9,6 +9,8 @@ import whisper
 import pytesseract
 from openai import OpenAI
 from dotenv import load_dotenv
+import streamlit as st
+
 try:
     import cv2
 except ImportError:
@@ -19,15 +21,27 @@ client = OpenAI(api_key=os.environ['openai_api_key'])
 
 import firebase_admin
 from firebase_admin import credentials, firestore
+def init_firebase():
+    if not firebase_admin._apps:
+        # Firebase credentials and initialization
+        firebase_creds = {
+            "type": os.environ.get('firebase_type'),
+            "project_id": os.environ.get('firebase_project_id'),
+            "private_key_id": os.environ.get('firebase_private_key_id'),
+            "private_key": os.environ.get('firebase_private_key').replace("\\n", "\n"),  # Ensure formatting
+            "client_email": os.environ.get('firebase_client_email'),
+            "client_id": os.environ.get('firebase_client_id'),
+            "auth_uri": os.environ.get('firebase_auth_uri'),
+            "token_uri": os.environ.get('firebase_token_uri'),
+            "auth_provider_x509_cert_url": os.environ.get('firebase_auth_provider_x509_cert_url'),
+            "client_x509_cert_url": os.environ.get('firebase_client_x509_cert_url')
+        }
 
-# Path to your service account key file
-service_account_key_path = 'secrets/serviceAccountKey.json'
+        cred = credentials.Certificate(firebase_creds)
+        firebase_admin.initialize_app(cred)
 
-# Initialize Firebase app
-if not firebase_admin._apps:
-    cred = credentials.Certificate(service_account_key_path)
-    firebase_admin.initialize_app(cred)
-
+# Call this function to initialize Firebase
+init_firebase()
 # Initialize Firestore DB
 db = firestore.client()
 
