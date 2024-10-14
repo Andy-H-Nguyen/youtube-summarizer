@@ -31,12 +31,13 @@ if not firebase_admin._apps:
 # Initialize Firestore DB
 db = firestore.client()
 
-def save_video_data(user_id, video_id, url, transcription, summary):
+def save_video_data(user_id, video_id, url, transcription, summary, video_name):
     doc_ref = db.collection('users').document(user_id).collection('videos').document(video_id)
     doc_ref.set({
         'url': url,
         'transcription': transcription,
-        'summary': summary
+        'summary': summary,
+        'name': video_name  # Store the video name in the database
     })
 
 def check_existing_video_data(user_id, video_id):
@@ -46,6 +47,12 @@ def check_existing_video_data(user_id, video_id):
         return doc.to_dict()  # Returns a dictionary with 'transcription' and 'summary'
     else:
         return None
+
+# Retrieve all videos processed by a specific user
+def check_all_videos_for_user(user_id):
+    collection_ref = db.collection('users').document(user_id).collection('videos')
+    docs = collection_ref.stream()  # This will return all video documents for the user
+    return docs
 
 def format_transcription(transcription):
     formatted_text = ""
@@ -106,9 +113,13 @@ def transcribe_video_orchestrator(youtube_url: str, model_name: str, batch_size:
             end_time = segment["end"]
             segment["screen_text"] = screen_text.get(end_time, "")
 
-    # Pass batch_size to the summarization function
     summary = summarize_video_with_memory(transcription, batch_size=batch_size)
-    return {'summary': summary, 'transcription': transcription}
+
+    return {
+        'summary': summary,
+        'transcription': transcription,
+        'name': video['name'],  # Pass the video name along with transcription and summary
+    }
 
 def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps: bool = True) -> List[Dict[str, float | str]]:
     model = whisper.load_model(model_name)
@@ -138,7 +149,7 @@ def download_youtube_video(youtube_url: str) -> dict:
         info = ydl.extract_info(youtube_url, download=True)
         file_path = ydl.prepare_filename(info)
         return {
-            "name": info.get('title', 'Unknown Title'),
+            "name": info.get('title', 'Unknown Title'),  # Extract the video name (title)
             "thumbnail": info.get('thumbnail'),
             "path": file_path
         }

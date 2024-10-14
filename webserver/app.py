@@ -1,11 +1,11 @@
 import streamlit as st
-from businessLogic import transcribe_video_orchestrator, format_transcription, check_existing_video_data, save_video_data
+from businessLogic import transcribe_video_orchestrator, format_transcription, check_existing_video_data, save_video_data, check_all_videos_for_user
 import time
 import uuid
 import re
 
+# Extract the video ID from a YouTube URL
 def extract_video_id(url):
-    # Regular expression to extract video ID
     regex = r"(?:v=|\/)([0-9A-Za-z_-]{11}).*"
     match = re.search(regex, url)
     if match:
@@ -13,11 +13,44 @@ def extract_video_id(url):
     else:
         return None
 
+# Generate or retrieve the user's unique ID (UUID)
 def get_user_id():
     if 'user_id' not in st.session_state:
-        # Generate a new UUID
         st.session_state['user_id'] = str(uuid.uuid4())
     return st.session_state['user_id']
+
+# Show previously processed videos for the user
+def show_previous_videos(user_id):
+    st.subheader("Your Previously Processed Videos:")
+    docs = check_all_videos_for_user(user_id)
+    
+    # Get previously processed videos from session state
+    if 'processed_videos' not in st.session_state:
+        st.session_state['processed_videos'] = []
+    
+    if st.session_state['processed_videos']:
+        for video_data in st.session_state['processed_videos']:
+            video_id = video_data['id']
+
+    if docs:
+        for doc in docs:
+            video_data = doc.to_dict()
+            video_id = doc.id
+
+            # Accordion for each video
+            with st.expander(video_data['name'], expanded=False):  # Use video name for the accordion title
+                st.write(f"**Video URL:** {video_data['url']}")
+                st.video(video_data['url'])  # Display video within the accordion
+                st.write(f"**Summary:** {video_data['summary'][:150]}...")  # Show the first 150 chars of the summary
+
+                # Button to load full details
+                if st.button(f"View Full Details for {video_data['url']}", key=video_id):
+                    st.session_state['youtube_url'] = video_data['url']
+                    st.session_state['transcription'] = video_data['transcription']
+                    st.session_state['summary'] = video_data['summary']
+
+    else:
+        st.write("You haven't processed any videos yet.")
 
 
 def main():
@@ -28,7 +61,6 @@ def main():
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
-
     body {
         font-family: 'Poppins', sans-serif;
         background: linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%);
@@ -120,28 +152,10 @@ def main():
         box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
         word-wrap: break-word;
     }
-    .video-glow {
-        box-shadow: 0 0 15px 3px rgba(255, 99, 72, 0.7);
-        transition: box-shadow 0.5s ease;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    .progress-bar {
-        background-color: #f39c12;
-        height: 8px;
-        border-radius: 10px;
-    }
-    .tabs-header {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #bdc3c7;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-    # Page title with YouTube icon and header color
+    # Display page title with YouTube icon and header
     st.markdown("""
         <div class='main-title'>
             <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" alt="YouTube icon" />
@@ -157,6 +171,11 @@ def main():
     if 'summary' not in st.session_state:
         st.session_state['summary'] = None
 
+    user_id = get_user_id()
+
+    # Show previously processed videos
+    show_previous_videos(user_id)
+
     with st.container():
         video_placeholder = st.empty()
         loading_placeholder = st.empty()
@@ -170,8 +189,9 @@ def main():
         model = st.selectbox("Select Transcription Model:", models, help="Choose a model for transcription. Larger models are more accurate but slower.")
 
         # Slider to control the batch size for summary detail level
-        batch_size = st.slider("Batch Size", min_value=5, max_value=60, value=10, step=5, help="Adjust the level of summary detail by controlling batch size. Less is more detailed.")
-        user_id = get_user_id()
+        batch_size = st.slider("Batch Size", min_value=5, max_value=60, value=10, step=5, help="Adjust the level of summary detail by controlling batch size.")
+        
+        # Video ID for checking existing data
         video_id = extract_video_id(url)
 
         st.info("**Note**: Smaller models are faster but less accurate, while larger models are slower but more accurate.", icon="⚙️")
@@ -205,10 +225,22 @@ def main():
                     result = transcribe_video_orchestrator(url, model.lower(), batch_size=batch_size)
                     transcript = result.get('transcription')
                     summary = result.get('summary')
-                    save_video_data(user_id, video_id, url, transcript, summary)
-                    # Hide loading spinner and progress bar
-                    loading_placeholder.empty()
-                    progress_bar_placeholder.empty()
+                    video_name = result.get('name')
+
+                    # Save video data, including video name, and update UI immediately
+                    save_video_data(user_id, video_id, url, transcript, summary, video_name)
+                    # Add new video data to session state for real-time update
+                    st.session_state['processed_videos'].append({
+                        'id': video_id,
+                        'name': f'Video {video_id}',  # Placeholder name for the video
+                        'url': url,
+                        'transcription': transcript,
+                        'summary': summary
+                    })
+
+                # Hide loading spinner and progress bar
+                loading_placeholder.empty()
+                progress_bar_placeholder.empty()
 
                 # Display transcription and summary in tabs
                 with tabs[0]:
