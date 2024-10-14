@@ -17,6 +17,36 @@ except ImportError:
 load_dotenv()
 client = OpenAI(api_key=os.environ['openai_api_key'])
 
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Path to your service account key file
+service_account_key_path = 'secrets/serviceAccountKey.json'
+
+# Initialize Firebase app
+if not firebase_admin._apps:
+    cred = credentials.Certificate(service_account_key_path)
+    firebase_admin.initialize_app(cred)
+
+# Initialize Firestore DB
+db = firestore.client()
+
+def save_video_data(user_id, video_id, url, transcription, summary):
+    doc_ref = db.collection('users').document(user_id).collection('videos').document(video_id)
+    doc_ref.set({
+        'url': url,
+        'transcription': transcription,
+        'summary': summary
+    })
+
+def check_existing_video_data(user_id, video_id):
+    doc_ref = db.collection('users').document(user_id).collection('videos').document(video_id)
+    doc = doc_ref.get()
+    if doc.exists:
+        return doc.to_dict()  # Returns a dictionary with 'transcription' and 'summary'
+    else:
+        return None
+
 def format_transcription(transcription):
     formatted_text = ""
     
@@ -141,3 +171,4 @@ def extract_text_from_video(video_path: str, transcription_with_timestamps: List
 
     video_capture.release()
     return text_data
+

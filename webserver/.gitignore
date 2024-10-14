@@ -2,3 +2,4 @@
 supabaseClient.py
 notionClient.py
 venv
+secrets

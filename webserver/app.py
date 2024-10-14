@@ -1,6 +1,24 @@
 import streamlit as st
-from businessLogic import transcribe_video_orchestrator, format_transcription
+from businessLogic import transcribe_video_orchestrator, format_transcription, check_existing_video_data, save_video_data
 import time
+import uuid
+import re
+
+def extract_video_id(url):
+    # Regular expression to extract video ID
+    regex = r"(?:v=|\/)([0-9A-Za-z_-]{11}).*"
+    match = re.search(regex, url)
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+def get_user_id():
+    if 'user_id' not in st.session_state:
+        # Generate a new UUID
+        st.session_state['user_id'] = str(uuid.uuid4())
+    return st.session_state['user_id']
+
 
 def main():
     # Set page configuration
@@ -153,6 +171,8 @@ def main():
 
         # Slider to control the batch size for summary detail level
         batch_size = st.slider("Batch Size", min_value=5, max_value=60, value=10, step=5, help="Adjust the level of summary detail by controlling batch size. Less is more detailed.")
+        user_id = get_user_id()
+        video_id = extract_video_id(url)
 
         st.info("**Note**: Smaller models are faster but less accurate, while larger models are slower but more accurate.", icon="⚙️")
 
@@ -167,22 +187,28 @@ def main():
         # Transcription button action
         if st.button("Transcribe", key="transcribe_button", help="Click to start the transcription process"):
             if url:
-                loading_placeholder.markdown("⏳ Transcribing video, please wait...", unsafe_allow_html=True)
-                progress_bar = progress_bar_placeholder.progress(0)
+                existing_data = check_existing_video_data(user_id, video_id)
+                if existing_data:
+                    # Use existing data
+                    transcript = existing_data['transcription']
+                    summary = existing_data['summary']
+                else:
+                    loading_placeholder.markdown("⏳ Transcribing video, please wait...", unsafe_allow_html=True)
+                    progress_bar = progress_bar_placeholder.progress(0)
 
-                # Simulate progress (optional)
-                for percent_complete in range(100):
-                    time.sleep(0.05)
-                    progress_bar.progress(percent_complete + 1)
+                    # Simulate progress (optional)
+                    for percent_complete in range(100):
+                        time.sleep(0.05)
+                        progress_bar.progress(percent_complete + 1)
 
-                # Call transcription (passing batch_size as summary detail level)
-                result = transcribe_video_orchestrator(url, model.lower(), batch_size=batch_size)
-                transcript = result.get('transcription')
-                summary = result.get('summary')
-
-                # Hide loading spinner and progress bar
-                loading_placeholder.empty()
-                progress_bar_placeholder.empty()
+                    # Call transcription (passing batch_size as summary detail level)
+                    result = transcribe_video_orchestrator(url, model.lower(), batch_size=batch_size)
+                    transcript = result.get('transcription')
+                    summary = result.get('summary')
+                    save_video_data(user_id, video_id, url, transcript, summary)
+                    # Hide loading spinner and progress bar
+                    loading_placeholder.empty()
+                    progress_bar_placeholder.empty()
 
                 # Display transcription and summary in tabs
                 with tabs[0]:
