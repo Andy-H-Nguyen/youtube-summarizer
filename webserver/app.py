@@ -21,43 +21,52 @@ def get_user_id():
 
 # Show previously processed videos for the user
 def show_previous_videos(user_id):
-    st.subheader("Your Previously Processed Videos:")
+    st.subheader("Previously Processed Videos:")
     docs = check_all_videos_for_user(user_id)
-    
-    # Get previously processed videos from session state
+
     if 'processed_videos' not in st.session_state:
         st.session_state['processed_videos'] = []
-    
-    if st.session_state['processed_videos']:
-        for video_data in st.session_state['processed_videos']:
-            video_id = video_data['id']
 
     if docs:
         for doc in docs:
             video_data = doc.to_dict()
             video_id = doc.id
 
-            # Accordion for each video
-            with st.expander(video_data['name'], expanded=False):  # Use video name for the accordion title
-                st.write(f"**Video URL:** {video_data['url']}")
-                st.video(video_data['url'])  # Display video within the accordion
-                st.write(f"**Summary:** {video_data['summary'][:150]}...")  # Show the first 150 chars of the summary
+            # Check if the video is already in session state, avoid duplication
+            if not any(video['id'] == video_id for video in st.session_state['processed_videos']):
+                st.session_state['processed_videos'].append({
+                    'id': video_id,
+                    'name': video_data.get('name', f"Video {video_id}"),
+                    'url': video_data['url'],
+                    'summary': video_data['summary'],
+                    'transcription': video_data['transcription']
+                })
 
-                # Button to load full details
-                if st.button(f"View Full Details for {video_data['url']}", key=video_id):
-                    st.session_state['youtube_url'] = video_data['url']
-                    st.session_state['transcription'] = video_data['transcription']
-                    st.session_state['summary'] = video_data['summary']
+    # Display videos with accordions
+    if st.session_state['processed_videos']:
+        for video in st.session_state['processed_videos']:
+            with st.expander(video['name'], expanded=False):
+                st.write(f"**Video URL:** {video['url']}")
+                st.video(video['url'])
+                st.write(f"**Summary:** {video['summary'][:150]}...")
+
+                # Button to load the full video and transcription
+                if st.button(f"View Full Details for {video['url']}", key=video['id']):
+                    st.session_state['youtube_url'] = video['url']
+                    st.session_state['transcription'] = video['transcription']
+                    st.session_state['summary'] = video['summary']
+
+                    # No need for rerun, Streamlit will automatically rerender
+                    # Just clear and update the inputs manually below
 
     else:
         st.write("You haven't processed any videos yet.")
 
-
 def main():
-    # Set page configuration
+    # Set page configuration and fix white flash
     st.set_page_config(page_title="YouTube Summarizer", page_icon="🎥", layout="centered")
 
-    # Custom CSS for enhanced UI/UX design
+    # Custom CSS for enhanced UI/UX design with a dark background to avoid white flashes
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
@@ -65,6 +74,9 @@ def main():
         font-family: 'Poppins', sans-serif;
         background: linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%);
         color: #ffffff;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
     }
     .main-title {
         color: #ff4757;
@@ -90,9 +102,12 @@ def main():
         backdrop-filter: blur(10px);
         border-radius: 20px;
         box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        animation: fadeIn 2s ease-in-out;
     }
     .input-container:hover {
         box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.6);
+        transform: scale(1.02);
     }
     input, select {
         font-size: 1.4em;
@@ -127,6 +142,7 @@ def main():
         margin-top: 60px;
         font-size: 1.1em;
         color: #bdc3c7;
+        animation: fadeIn 2s ease-in-out;
     }
     .placeholder {
         display: flex;
@@ -151,6 +167,11 @@ def main():
         margin-top: 25px;
         box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
         word-wrap: break-word;
+        animation: fadeIn 2s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -176,13 +197,13 @@ def main():
     # Show previously processed videos
     show_previous_videos(user_id)
 
+    # Use st.session_state['youtube_url'] as the default value for the URL input field
+    url = st.text_input("Enter YouTube URL:", value=st.session_state.get('youtube_url', ''), placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")
+
     with st.container():
         video_placeholder = st.empty()
         loading_placeholder = st.empty()
         progress_bar_placeholder = st.empty()
-
-        # User input: YouTube URL
-        url = st.text_input("Enter YouTube URL:", placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")
 
         # Model selection dropdown
         models = ["Tiny", "Base", "Small", "Medium", "Large"]
@@ -232,7 +253,7 @@ def main():
                     # Add new video data to session state for real-time update
                     st.session_state['processed_videos'].append({
                         'id': video_id,
-                        'name': f'Video {video_id}',  # Placeholder name for the video
+                        'name': video_name,
                         'url': url,
                         'transcription': transcript,
                         'summary': summary
