@@ -1,6 +1,0 @@
-.env
-supabaseClient.py
-notionClient.py
-venv
-secrets
-__pycache__
