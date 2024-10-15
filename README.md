@@ -1,7 +1,7 @@
 
 # YoutubeSummarizer
 
-![CI Test Suite](https://github.com/your-username/your-repo/actions/workflows/ci.yml/badge.svg)
+![CI Test Suite](https://github.com/Andy-H-Nguyen/youtube-summarizer/actions/workflows/ci.yml/badge.svg)
 
 YoutubeSummarizer allows you to easily convert a YouTube video to text and summarize its content.
 
