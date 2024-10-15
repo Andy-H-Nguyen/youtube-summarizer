@@ -6,7 +6,7 @@ from utils.user_utils import get_user_id
 from utils.video_utils import extract_video_id, show_previous_videos
 from utils.transcription_utils import format_transcription
 
-def render_video_summarizer():
+def render_video_summarizer(cookies):
     inject_css()
 
     st.markdown("""
@@ -23,7 +23,7 @@ def render_video_summarizer():
     if 'summary' not in st.session_state:
         st.session_state['summary'] = None
 
-    user_id = get_user_id()
+    user_id = get_user_id(cookies)
 
     show_previous_videos(user_id)
 

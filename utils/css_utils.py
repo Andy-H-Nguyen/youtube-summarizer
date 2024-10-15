@@ -103,6 +103,9 @@ def inject_css():
         word-wrap: break-word;
         animation: fadeIn 2s ease-in-out;
     }
+    .stExpander .stTextInput .stElementContainer {
+        animation: fadeIn 2s ease-in-out;
+    }
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
