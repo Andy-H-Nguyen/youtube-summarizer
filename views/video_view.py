@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from controllers.de import transcribe_video_orchestrator, save_video_data, check_existing_video_data
+from controllers.video_controller import transcribe_video_orchestrator, save_video_data, check_existing_video_data
 from utils.css_utils import inject_css
 from utils.user_utils import get_user_id
 from utils.video_utils import extract_video_id, show_previous_videos
