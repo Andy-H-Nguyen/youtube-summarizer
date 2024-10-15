@@ -43,7 +43,7 @@ This command will automatically discover and run all test cases in the `tests` d
 
 This project uses [GitHub Actions](https://github.com/features/actions) for continuous integration (CI). Each time you push code or open a pull request, the CI workflow will automatically run the tests.
 
-![CI Test Suite](https://github.com/your-username/your-repo/actions/workflows/ci.yml/badge.svg)
+![CI Test Suite](https://github.com/Andy-H-Nguyen/youtube-summarizer/actions/workflows/ci.yml/badge.svg)
 
 ## Environment Setup
 
