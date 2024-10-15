@@ -32,6 +32,7 @@ def summarize_video_with_memory(transcription_with_timestamps: List[Dict[str, fl
         combined_summaries = "\n\n".join(partial_summaries)
     except Exception as e:
         print(f"An exception has occurred: {e}")
+        combined_summaries = "\n\n".join(partial_summaries)
         return combined_summaries
 
     return combined_summaries

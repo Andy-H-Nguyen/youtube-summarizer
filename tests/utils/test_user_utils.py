@@ -1,22 +1,28 @@
 import unittest
-from unittest.mock import patch
-import streamlit as st  # Import streamlit as st
+from unittest.mock import MagicMock
+import uuid
 from utils.user_utils import get_user_id
 
 class TestUserUtils(unittest.TestCase):
 
-    @patch('streamlit.session_state', {})
-    def test_get_user_id(self):
-        # Ensure session state is empty
-        self.assertNotIn('user_id', st.session_state, "Session state should not contain user_id initially.")
+    def test_get_user_id_existing_cookie(self):
+        mock_cookies = MagicMock()
+        mock_cookies.get.return_value = "existing-user-id-123"
+        user_id = get_user_id(mock_cookies)
 
-        # Call get_user_id
-        user_id = get_user_id()
+        self.assertEqual(user_id, "existing-user-id-123", "It should return the existing user_id from the cookies.")
+        mock_cookies.get.assert_called_once_with("user_id")
+        mock_cookies.__setitem__.assert_not_called()
+        mock_cookies.save.assert_not_called()
 
-        # Assertions
-        self.assertTrue(isinstance(user_id, str), "User ID should be a string.")
-        self.assertIn('user_id', st.session_state, "User ID should be saved in session state.")
-        self.assertEqual(user_id, st.session_state['user_id'], "User ID should match session state value.")
+    def test_get_user_id_new_cookie(self):
+        mock_cookies = MagicMock()
+        mock_cookies.get.return_value = None
+        user_id = get_user_id(mock_cookies)
+        
+        self.assertTrue(isinstance(uuid.UUID(user_id), uuid.UUID), "The new user_id should be a valid UUID.")
+        mock_cookies.__setitem__.assert_called_once_with("user_id", user_id)
+        mock_cookies.save.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()
