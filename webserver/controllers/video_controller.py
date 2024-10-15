@@ -1,7 +1,7 @@
 from services.youtube_service import download_youtube_video
 from services.openai_service import summarize_video_with_memory
 from utils.vision_utils import extract_text_from_video
-from models.video_model import save_video_to_firebase
+from models.video_model import save_video_to_firebase, get_video
 import whisper
 from typing import Dict, List
 
@@ -42,3 +42,6 @@ def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps:
 
 def save_video_data(user_id, video_id, url, transcription, summary, video_name):
     save_video_to_firebase(user_id, video_id, url, transcription, summary, video_name)
+
+def check_existing_video_data(user_id, video_id):
+    return get_video(user_id, video_id)
