@@ -27,21 +27,21 @@ def render_video_summarizer():
 
     show_previous_videos(user_id)
 
-    url = st.text_input("Enter YouTube URL:", value=st.session_state.get('youtube_url', ''), placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")
-
     with st.container():
         video_placeholder = st.empty()
         loading_placeholder = st.empty()
         progress_bar_placeholder = st.empty()
 
+        url = st.text_input("Enter YouTube URL:", value=st.session_state.get('youtube_url', ''), placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")
+
         models = ["Tiny", "Base", "Small", "Medium", "Large"]
         model = st.selectbox("Select Transcription Model:", models, help="Choose a model for transcription.")
 
         batch_size = st.slider("Batch Size", min_value=5, max_value=60, value=10, step=5, help="Adjust the level of summary detail by controlling batch size.")
-        
-        video_id = extract_video_id(url)
 
         st.info("**Note**: Smaller models are faster but less accurate, while larger models are slower but more accurate.", icon="⚙️")
+
+        video_id = extract_video_id(url)
 
         if url:
             video_placeholder.video(url)

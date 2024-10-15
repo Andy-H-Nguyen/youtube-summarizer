@@ -11,7 +11,6 @@ def extract_video_id(url):
         return None
 
 def show_previous_videos(user_id):
-    st.subheader("Previously Processed Videos:")
     docs = check_all_videos_for_user(user_id)
 
     if 'processed_videos' not in st.session_state:
@@ -42,5 +41,3 @@ def show_previous_videos(user_id):
                     st.session_state['youtube_url'] = video['url']
                     st.session_state['transcription'] = video['transcription']
                     st.session_state['summary'] = video['summary']
-    else:
-        st.write("You haven't processed any videos yet.")
