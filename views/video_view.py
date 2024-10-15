@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from controllers.video_controller import transcribe_video_orchestrator, save_video_data, check_existing_video_data
+from controllers.de import transcribe_video_orchestrator, save_video_data, check_existing_video_data
 from utils.css_utils import inject_css
 from utils.user_utils import get_user_id
 from utils.video_utils import extract_video_id, show_previous_videos
@@ -25,7 +25,6 @@ def render_video_summarizer():
 
     user_id = get_user_id()
 
-    # Show previously processed videos
     show_previous_videos(user_id)
 
     url = st.text_input("Enter YouTube URL:", value=st.session_state.get('youtube_url', ''), placeholder="https://www.youtube.com/watch?v=example", help="Paste the URL of the YouTube video you want to summarize.")

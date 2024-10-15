@@ -11,7 +11,7 @@ def download_youtube_video(youtube_url: str) -> dict:
         info = ydl.extract_info(youtube_url, download=True)
         file_path = ydl.prepare_filename(info)
         return {
-            "name": info.get('title', 'Unknown Title'),  # Extract the video name (title)
+            "name": info.get('title', 'Unknown Title'), 
             "thumbnail": info.get('thumbnail'),
             "path": file_path
         }

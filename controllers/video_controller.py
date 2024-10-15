@@ -20,7 +20,7 @@ def transcribe_video_orchestrator(youtube_url: str, model_name: str, batch_size:
     return {
         'summary': summary,
         'transcription': transcription,
-        'name': video['name'],  # Pass the video name along with transcription and summary
+        'name': video['name'],
     }
 
 def transcribe(video: Dict[str, str], model_name: str = "medium", hasTimestamps: bool = True) -> List[Dict[str, float | str]]:
