@@ -1,6 +1,4 @@
 import re
-from supabase import getTranscription
-
 
 def is_youtube_url(url):
     # Regular expression pattern for a YouTube video URL
@@ -11,22 +9,3 @@ def is_youtube_url(url):
 
     # Return True if the pattern matches, otherwise False
     return match is not None
-
-
-def is_already_transcribed(url):
-    data = getTranscription(url)
-    print(data)
-    if not all(data):
-        return False
-
-    return True
-
-
-PREFIX = 'Bearer '
-
-
-def get_token(header):
-    if not header.startswith(PREFIX):
-        raise ValueError('Invalid token')
-
-    return header[len(PREFIX):]

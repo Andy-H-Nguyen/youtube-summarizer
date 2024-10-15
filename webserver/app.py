@@ -1,10 +1,11 @@
 import streamlit as st
-from businessLogic import transcribe_video_orchestrator, format_transcription, check_existing_video_data, save_video_data, check_all_videos_for_user
 import time
+from controllers.video_controller import transcribe_video_orchestrator, save_video_data
+from services.firebase_service import check_existing_video_data, check_all_videos_for_user
+from utils.transcription_utils import format_transcription
 import uuid
 import re
 
-# Extract the video ID from a YouTube URL
 def extract_video_id(url):
     regex = r"(?:v=|\/)([0-9A-Za-z_-]{11}).*"
     match = re.search(regex, url)
@@ -13,13 +14,11 @@ def extract_video_id(url):
     else:
         return None
 
-# Generate or retrieve the user's unique ID (UUID)
 def get_user_id():
     if 'user_id' not in st.session_state:
         st.session_state['user_id'] = str(uuid.uuid4())
     return st.session_state['user_id']
 
-# Show previously processed videos for the user
 def show_previous_videos(user_id):
     st.subheader("Previously Processed Videos:")
     docs = check_all_videos_for_user(user_id)
@@ -32,7 +31,6 @@ def show_previous_videos(user_id):
             video_data = doc.to_dict()
             video_id = doc.id
 
-            # Check if the video is already in session state, avoid duplication
             if not any(video['id'] == video_id for video in st.session_state['processed_videos']):
                 st.session_state['processed_videos'].append({
                     'id': video_id,
@@ -237,20 +235,16 @@ def main():
                     loading_placeholder.markdown("⏳ Transcribing video, please wait...", unsafe_allow_html=True)
                     progress_bar = progress_bar_placeholder.progress(0)
 
-                    # Simulate progress (optional)
                     for percent_complete in range(100):
                         time.sleep(0.05)
                         progress_bar.progress(percent_complete + 1)
 
-                    # Call transcription (passing batch_size as summary detail level)
                     result = transcribe_video_orchestrator(url, model.lower(), batch_size=batch_size)
-                    transcript = result.get('transcription')
-                    summary = result.get('summary')
-                    video_name = result.get('name')
+                    transcript = result['transcription']
+                    summary = result['summary']
+                    video_name = result['name']
 
-                    # Save video data, including video name, and update UI immediately
                     save_video_data(user_id, video_id, url, transcript, summary, video_name)
-                    # Add new video data to session state for real-time update
                     st.session_state['processed_videos'].append({
                         'id': video_id,
                         'name': video_name,
@@ -259,11 +253,9 @@ def main():
                         'summary': summary
                     })
 
-                # Hide loading spinner and progress bar
                 loading_placeholder.empty()
                 progress_bar_placeholder.empty()
 
-                # Display transcription and summary in tabs
                 with tabs[0]:
                     if transcript:
                         st.success("Transcription completed!")
